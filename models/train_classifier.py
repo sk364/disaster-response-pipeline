@@ -1,7 +1,8 @@
+import sys
 import re
 import nltk
 import pandas as pd
-import pickle
+import joblib
 
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
@@ -9,23 +10,15 @@ from nltk.tokenize import word_tokenize
 
 from sqlalchemy import create_engine
 
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import (
-    confusion_matrix,
-    classification_report,
-    precision_score,
-    accuracy_score,
-    recall_score
-)
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.metrics import classification_report, accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.model_selection import GridSearchCV
+from sklearn.base import BaseEstimator, TransformerMixin
 
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
+nltk.download(['punkt', 'stopwords', 'wordnet', 'averaged_perceptron_tagger'])
 
 
 class StartingVerbExtractor(BaseEstimator, TransformerMixin):
@@ -33,9 +26,10 @@ class StartingVerbExtractor(BaseEstimator, TransformerMixin):
         sentence_list = nltk.sent_tokenize(text)
         for sentence in sentence_list:
             pos_tags = nltk.pos_tag(tokenize(sentence))
-            first_word, first_tag = pos_tags[0]
-            if first_tag in ['VB', 'VBP'] or first_word == 'RT':
-                return True
+            if pos_tags:
+                first_word, first_tag = pos_tags[0]
+                if first_tag in ['VB', 'VBP'] or first_word == 'RT':
+                    return True
         return False
 
     def fit(self, x, y=None):
@@ -136,10 +130,7 @@ def evaluate_model(model, X_test, y_test):
 
 
 def save_model(model, model_save_path):
-    """
-    Saves model using pickle module
-    """
-    pickle.dump(model, open(model_save_path, 'wb'))
+    joblib.dump(model, model_save_path)
 
 
 if __name__ == "__main__":
@@ -150,11 +141,19 @@ if __name__ == "__main__":
         sys.exit()
 
     db_path, model_save_loc = args[1:3]
+
+    print("Loading data...")
     df = load_data(db_path, "MessageCategories")
     X, y = get_training_target_data(df)
 
+
+    print("Training model...")
     model = build_model()
     X_train, X_test, y_train, y_test = train_test_split(X, y)
     model.fit(X_train, y_train)
+
+    print("Evaluating model...")
     evaluate_model(model, X_test, y_test)
+
+    print("Saving model...")
     save_model(model, model_save_loc)
