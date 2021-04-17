@@ -28,6 +28,24 @@ nltk.download('stopwords')
 nltk.download('wordnet')
 
 
+class StartingVerbExtractor(BaseEstimator, TransformerMixin):
+    def starting_verb(self, text):
+        sentence_list = nltk.sent_tokenize(text)
+        for sentence in sentence_list:
+            pos_tags = nltk.pos_tag(tokenize(sentence))
+            first_word, first_tag = pos_tags[0]
+            if first_tag in ['VB', 'VBP'] or first_word == 'RT':
+                return True
+        return False
+
+    def fit(self, x, y=None):
+        return self
+
+    def transform(self, X):
+        X_tagged = pd.Series(X).apply(self.starting_verb)
+        return pd.DataFrame(X_tagged)
+
+
 def load_data(database_path, table_name):
     """
     Loads data from SQL table
@@ -87,33 +105,34 @@ def build_model():
     # build pipeline tokenizing the text, applying TF-IDF feature extractor and finally building a
     # multioutput classifier
     pipeline = Pipeline([
-        ('vect', CountVectorizer(tokenizer=tokenize)),
-        ('tfidf', TfidfTransformer()),
+        ('features', FeatureUnion([
+            ('text_pipeline', Pipeline([
+                ('vect', CountVectorizer(tokenizer=tokenize)),
+                ('tfidf', TfidfTransformer())
+            ])),
+            ('starting_verb', StartingVerbExtractor())
+        ])),
         ('clf', MultiOutputClassifier(RandomForestClassifier()))
     ])
 
-    parameters = {
-        'vect__ngram_range': ((1, 1), (1, 2)),
-        'vect__max_df': (0.5, 0.75, 1.0),
-        'vect__max_features': (None, 5000, 10000),
-        'tfidf__use_idf': (True, False),
-        'clf__estimator__n_estimators': [50, 100, 200],
-        'clf__estimator__min_samples_split': [2, 3, 4],
-    }
-
-    cv = GridSearchCV(pipeline, param_grid=parameters)
-
-    return cv
+    return pipeline
 
 
-def train_model(model, X, y):
+def evaluate_model(model, X_test, y_test):
     """
-    Trains model, returning a tuple of the test target values and the predictions for the test data.
+    Evaluates model printing the accuracy, precision and recall for each category
     """
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y)
-    model.fit(X_train, y_train)
-    return y_test, model.predict(X_test)
+    y_pred = model.predict(X_test)
+
+    for idx, column in enumerate(y_test.columns):
+        y_pred_values = y_pred[:, idx]
+        y_test_values = y_test[column]
+
+        print(f'Category: {column}')
+        print(classification_report(y_test_values, y_pred_values))
+        print(f'Accuracy: {accuracy_score(y_test_values, y_pred_values)}')
+        print()
 
 
 def save_model(model, model_save_path):
@@ -135,7 +154,7 @@ if __name__ == "__main__":
     X, y = get_training_target_data(df)
 
     model = build_model()
-    y_test, y_pred = train_model(model, X, y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y)
+    model.fit(X_train, y_train)
+    evaluate_model(model, X_test, y_test)
     save_model(model, model_save_loc)
-
-    # display_results(model, y_test, y_pred)
