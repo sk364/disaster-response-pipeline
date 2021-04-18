@@ -4,6 +4,7 @@
 * [How To Run](#run)
 * [Project Motivation](#motivation)
 * [File Descriptions](#desc)
+* [Acknowledgements](#ack)
 
 ## Installation<a name="installation"></a>
 
@@ -43,3 +44,7 @@ The repository holds 3 directories:
 `app` directory contains the code to run the Flask app.
 `data` contains the CSV datasets, data processing script and processed SQLite database file.
 `models` contains the classifier training script and the resulting model from it.
+
+## Acknowledgements<a name="ack"></a>
+
+Thanks to Figure Eight for providing the disaster messages and categories datasets and a huge shoutout to Udacity for the course content, guiding me well to develop this project.
