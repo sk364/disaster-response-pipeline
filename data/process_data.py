@@ -93,7 +93,7 @@ def store_data_to_sqlite(df, database_name, table_name):
 
     # Load
     engine = create_engine(f'sqlite:///{database_name}')
-    df.to_sql(table_name, engine, index=False)
+    df.to_sql(table_name, engine, index=False, if_exists='replace')
 
 
 if __name__ == '__main__':
