@@ -70,14 +70,26 @@ model = joblib.load("../models/classifier.pkl")
 @app.route('/')
 @app.route('/index')
 def index():
-    
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
+
+    category_names = [
+        'related', 'request', 'offer', 'aid_related', 'medical_help', 'medical_products',
+        'search_and_rescue', 'security', 'military', 'child_alone', 'water', 'food', 'shelter',
+        'clothing', 'money', 'missing_people', 'refugees', 'death', 'other_aid',
+        'infrastructure_related', 'transport', 'buildings', 'electricity', 'tools',
+        'hospitals', 'shops', 'aid_centers', 'other_infrastructure', 'weather_related',
+        'floods', 'storm', 'fire', 'earthquake', 'cold', 'other_weather', 'direct_report'
+    ]
+    category_counts = [0] * 36
+    for row in df.iterrows():
+        for idx, cat in enumerate(category_names):
+            if row[1][cat] == 1:
+                category_counts[idx] += 1
+
     
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
@@ -94,6 +106,24 @@ def index():
                 },
                 'xaxis': {
                     'title': "Genre"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=[cat.replace('_', ' ').title() for cat in category_names],
+                    y=category_counts
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Message Categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
                 }
             }
         }
