@@ -17,6 +17,7 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.model_selection import GridSearchCV
 
 nltk.download(['punkt', 'stopwords', 'wordnet', 'averaged_perceptron_tagger'])
 
@@ -109,7 +110,17 @@ def build_model():
         ('clf', MultiOutputClassifier(RandomForestClassifier()))
     ])
 
-    return pipeline
+    parameters = {
+        'features__text_pipeline__vect__ngram_range': ((1, 1), (1, 2)),
+        'features__text_pipeline__vect__max_df': (0.5, 0.75, 1.0),
+        'features__text_pipeline__vect__max_features': (None, 5000, 10000),
+        'features__text_pipeline__tfidf__use_idf': (True, False),
+        'clf__estimator__n_estimators': [50, 100],
+        'clf__estimator__min_samples_split': [2, 3],
+    }
+    cv = GridSearchCV(pipeline, param_grid=parameters)
+
+    return cv
 
 
 def evaluate_model(model, X_test, y_test):
