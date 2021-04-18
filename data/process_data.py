@@ -76,8 +76,8 @@ def transform_data(df):
     if dups.shape[0] > 1:
         df = df.drop_duplicates()
 
-    # drop rows which have categories with value other than 0 or 1
-    df = df[(df[category_colnames].eq(0)) | (df[category_colnames].eq(1))]
+    # drop rows which have categories with values as 2
+    df = df[df[category_colnames].ne(2).all(1)]
 
     return df
 
