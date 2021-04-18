@@ -4,6 +4,7 @@
 * [How To Run](#run)
 * [Project Motivation](#motivation)
 * [File Descriptions](#desc)
+* [Screens](#scr)
 * [Acknowledgements](#ack)
 
 ## Installation<a name="installation"></a>
@@ -44,6 +45,15 @@ The repository holds 3 directories:
 `app` directory contains the code to run the Flask app.
 `data` contains the CSV datasets, data processing script and processed SQLite database file.
 `models` contains the classifier training script and the resulting model from it.
+
+## Screens<a name="scr"></a>
+
+**Genre and Category Distribution**:
+![Landing Page](./assets/main-page.png)
+
+**Classification of a message**:
+![Classification](./assets/classify-1.png)
+![Classification](./assets/classify-2.png)
 
 ## Acknowledgements<a name="ack"></a>
 
