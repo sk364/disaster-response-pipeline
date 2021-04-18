@@ -76,6 +76,9 @@ def transform_data(df):
     if dups.shape[0] > 1:
         df = df.drop_duplicates()
 
+    # drop rows which have categories with value other than 0 or 1
+    df = df[(df[category_colnames].eq(0)) | (df[category_colnames].eq(1))]
+
     return df
 
 
@@ -89,7 +92,7 @@ def store_data_to_sqlite(df, database_name, table_name):
     """
 
     # Load
-    engine = create_engine(f'sqlite:///{database_name}.db')
+    engine = create_engine(f'sqlite:///{database_name}')
     df.to_sql(table_name, engine, index=False)
 
 
